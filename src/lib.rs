@@ -38,10 +38,10 @@ impl Blocks {
         let response = agent
             .get(LATEST_URL)
             .call()
-            .map_err(DownloadError::request())?;
+            .map_err(DownloadError::request)?;
 
-        Self::from_str(&response.into_string().map_err(DownloadError::read_body())?)
-            .map_err(DownloadError::parse())
+        Self::from_str(&response.into_string().map_err(DownloadError::read_body)?)
+            .map_err(DownloadError::parse)
     }
 }
 
@@ -92,18 +92,18 @@ pub enum DownloadErrorKind {
 }
 
 impl DownloadError {
-    pub fn request() -> impl FnOnce(ureq::Error) -> Self {
-        move |error: ureq::Error| DownloadError {
+    pub(crate) fn request(error: ureq::Error) -> Self {
+        DownloadError {
             kind: DownloadErrorKind::Request(Box::new(error)),
         }
     }
-    pub fn read_body() -> impl FnOnce(io::Error) -> Self {
-        move |error: io::Error| DownloadError {
+    pub(crate) fn read_body(error: io::Error) -> Self {
+        DownloadError {
             kind: DownloadErrorKind::ReadBody(error),
         }
     }
-    pub fn parse() -> impl FnOnce(ParseError) -> Self {
-        move |error: ParseError| DownloadError {
+    pub(crate) fn parse(error: ParseError) -> Self {
+        DownloadError {
             kind: DownloadErrorKind::Parse(error),
         }
     }
@@ -139,7 +139,7 @@ pub enum FromFileErrorKind {
 }
 
 impl FromFileError {
-    pub fn read_file<P>(path: P) -> impl FnOnce(io::Error) -> FromFileError
+    pub(crate) fn read_file<P>(path: P) -> impl FnOnce(io::Error) -> FromFileError
     where
         P: Into<Box<Path>>,
     {
@@ -149,7 +149,7 @@ impl FromFileError {
         }
     }
 
-    pub fn parse<P>(path: P) -> impl FnOnce(ParseError) -> FromFileError
+    pub(crate) fn parse<P>(path: P) -> impl FnOnce(ParseError) -> FromFileError
     where
         P: Into<Box<Path>>,
     {
@@ -193,11 +193,11 @@ pub enum ParseErrorKind {
 }
 
 impl ParseError {
-    pub fn new(line: usize, kind: ParseErrorKind) -> Self {
+    pub(crate) fn new(line: usize, kind: ParseErrorKind) -> Self {
         ParseError { line, kind }
     }
 
-    pub fn parse_int(line: usize) -> impl FnOnce(ParseIntError) -> Self {
+    pub(crate) fn parse_int(line: usize) -> impl FnOnce(ParseIntError) -> Self {
         move |error: ParseIntError| ParseError {
             line,
             kind: ParseErrorKind::ParseInt(error),

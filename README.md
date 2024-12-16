@@ -25,7 +25,7 @@ you can provide methods on the Error struct to ease creation:
 
 ```rust
 impl DemoError {
-    pub fn deeper_error(data: String) -> impl FnOnce(DeeperError) -> Self {
+    fn deeper_error(data: String) -> impl FnOnce(DeeperError) -> Self {
         move |error: DeeperError| {
             DemoError {
                 data,
@@ -62,6 +62,20 @@ pub fn demo(data: String) -> Result<(), DemoError> {
 In my opinion, this is noisier for no benefit.
 Though admittedly the first version might cause a double take the first time it is encountered.
 
+### Without context
+
+Without any additional context on the error struct (e.g. `DownloadError` from lib.rs),
+a closure isn't neccessary since there is no context to inject.
+Just return the Error struct with the given kind directly.
+
+```rust
+impl DownloadError {
+    fn read_body(error: io::Error) -> Self {
+        DownloadError { kind: DownloadErrorKind::ReadBody }
+    }
+}
+```
+
 ## Error chain start methods
 
 Just use `new()`.
@@ -96,3 +110,15 @@ and updating them as you change things, and add new variants?
 
 And remembering which methods return closures and which ones return `DemoError`?
 Easier with `DemoError::new()` being the only method that returns `DemoError`.
+
+## Alternatives
+
+I was delighted to be shown a different approach using
+
+```rust
+impl From<(ErrorKind, Context)> for Error
+```
+
+Basically, a tuple is used to conveniently insert the Context (data).
+
+See [quinedot's comment on this IRLO post](https://internals.rust-lang.org/t/helper-for-passing-extra-context-to-errors/20259/11) discussing the idea of maybe a `Result::zip_err` method.
