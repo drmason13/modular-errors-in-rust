@@ -1,9 +1,10 @@
 Example demonstrating an idea/pattern for easing the construction of error types.
 
 First of all, read [this article](https://sabrinajewson.org/blog/errors).
+I want to give credit to Sabrina Jewson, this is just a simple iteration on her work.  
 
 This repo shows the same code,
-but with additional methods on each modular error type to "chain" errors into specific error kinds
+but with additional methods on each modular error type to "chain" errors into specific error kinds.
 
 ## Error chaining methods
 
